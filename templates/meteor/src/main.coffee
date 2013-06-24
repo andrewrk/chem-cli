@@ -1,6 +1,7 @@
-#depend "chem"
+chem = require 'chem'
 
-{Vec2d, Engine, Sprite, Batch, Button} = Chem
+{Engine, Sprite, Batch, button} = chem
+Vec2d = chem.vec2d.Vec2d
 
 randInt = (min, max) -> Math.floor(min + Math.random() * (max - min + 1))
 
@@ -15,29 +16,29 @@ class MovingSprite
 
 class Game
   constructor: (@engine) ->
-    @had_game_over = false
+    @hadGameOver = false
     @stars = []
     @meteors = []
     @batch = new Batch()
-    @img_star = [
+    @imgStar = [
       'star_small'
       'star_big'
     ]
-    @img_meteor = [
+    @imgMeteor = [
       'meteor_small'
       'meteor_big'
     ]
     @ship = new Sprite 'ship',
       batch: @batch
       pos: new Vec2d(0, @engine.size.y / 2)
-      z_order: 2
-    @ship_vel = new Vec2d()
+      zOrder: 2
+    @shipVel = new Vec2d()
 
-    @meteor_interval = 0.3
-    @next_meteor_at = @meteor_interval
+    @meteorInterval = 0.3
+    @nextMeteorAt = @meteorInterval
 
-    @star_interval = 0.1
-    @next_star_at = @star_interval
+    @starInterval = 0.1
+    @nextStarAt = @starInterval
 
     @score = 0
 
@@ -47,84 +48,84 @@ class Game
     @engine.start()
 
   createStar: ->
-    sprite = new Sprite @img_star[randInt(0, 1)],
+    sprite = new Sprite @imgStar[randInt(0, 1)],
       batch: @batch
       pos: new Vec2d(@engine.size.x, randInt(0, @engine.size.y))
-      z_order: 0
+      zOrder: 0
     obj = new MovingSprite(sprite, new Vec2d(-400 + Math.random() * 200, 0))
     @stars.push(obj)
 
   createMeteor: ->
-    sprite = new Sprite @img_meteor[randInt(0, 1)],
+    sprite = new Sprite @imgMeteor[randInt(0, 1)],
       batch: @batch
       pos: new Vec2d(@engine.size.x, randInt(0, @engine.size.y))
-      z_order: 1
+      zOrder: 1
     obj = new MovingSprite(sprite, new Vec2d(-600 + Math.random() * 400, -200 + Math.random() * 400))
     @meteors.push(obj)
 
   update: (dt) =>
-    if @had_game_over
-      if @engine.buttonJustPressed(Button.Key_Space)
+    if @hadGameOver
+      if @engine.buttonJustPressed(button.KeySpace)
         location.href = location.href
         return
     else
-      score_per_sec = 60
-      @score += score_per_sec * dt
+      scorePerSec = 60
+      @score += scorePerSec * dt
 
-    @next_meteor_at -= dt
-    if @next_meteor_at <= 0
-      @next_meteor_at = @meteor_interval
+    @nextMeteorAt -= dt
+    if @nextMeteorAt <= 0
+      @nextMeteorAt = @meteorInterval
       @createMeteor()
 
-    if not @had_game_over
-      @meteor_interval -= dt * 0.01
+    if not @hadGameOver
+      @meteorInterval -= dt * 0.01
 
-    @next_star_at -= dt
-    if @next_star_at <= 0
-      @next_star_at = @star_interval
+    @nextStarAt -= dt
+    if @nextStarAt <= 0
+      @nextStarAt = @starInterval
       @createStar()
 
-    for list_name in ['stars', 'meteors']
-      cleaned_list = []
-      obj_list = @[list_name]
-      for obj in obj_list
+    for listName in ['stars', 'meteors']
+      cleanedList = []
+      objList = @[listName]
+      for obj in objList
         if not obj.gone
           obj.sprite.pos.add(obj.vel.scaled(dt))
           if obj.sprite.getRight() < 0
             obj.delete()
           else
-            cleaned_list.push(obj)
-      @[list_name] = cleaned_list
+            cleanedList.push(obj)
+      @[listName] = cleanedList
 
-    if not @had_game_over
-      ship_accel = 600
+    if not @hadGameOver
+      shipAccel = 600
 
-      if @engine.buttonState(Button.Key_Left)
-        @ship_vel.x -= ship_accel * dt
-      if @engine.buttonState(Button.Key_Right)
-        @ship_vel.x += ship_accel * dt
-      if @engine.buttonState(Button.Key_Up)
-        @ship_vel.y -= ship_accel * dt
-      if @engine.buttonState(Button.Key_Down)
-        @ship_vel.y += ship_accel * dt
+      if @engine.buttonState(button.KeyLeft)
+        @shipVel.x -= shipAccel * dt
+      if @engine.buttonState(button.KeyRight)
+        @shipVel.x += shipAccel * dt
+      if @engine.buttonState(button.KeyUp)
+        @shipVel.y -= shipAccel * dt
+      if @engine.buttonState(button.KeyDown)
+        @shipVel.y += shipAccel * dt
 
-    @ship.pos.add(@ship_vel.scaled(dt))
+    @ship.pos.add(@shipVel.scaled(dt))
 
-    if not @had_game_over
+    if not @hadGameOver
       corner = @ship.getTopLeft()
       if corner.x < 0
         @ship.setLeft(0)
-        @ship_vel.x = 0
+        @shipVel.x = 0
       if corner.y < 0
         @ship.setTop(0)
-        @ship_vel.y = 0
+        @shipVel.y = 0
       corner = @ship.getBottomRight()
       if corner.x > @engine.size.x
         @ship.setRight(@engine.size.x)
-        @ship_vel.x = 0
+        @shipVel.x = 0
       if corner.y > @engine.size.y
         @ship.setBottom(@engine.size.y)
-        @ship_vel.y = 0
+        @shipVel.y = 0
 
       for meteor in @meteors
         if meteor.gone
@@ -135,12 +136,12 @@ class Game
     return
 
   gameOver: ->
-    if @had_game_over
+    if @hadGameOver
       return
-    @had_game_over = true
+    @hadGameOver = true
     @ship.setAnimationName('explosion')
     @ship.setFrameIndex(0)
-    @ship.on 'animation_end', => @ship.delete()
+    @ship.on 'animationend', => @ship.delete()
 
   draw: (context) =>
     context.fillStyle = '#000000'
@@ -149,7 +150,7 @@ class Game
     context.fillStyle = "#ffffff"
     context.font = "30px Arial"
     context.fillText "Score: #{Math.floor(@score)}", 0, 30
-    if @had_game_over
+    if @hadGameOver
       context.fillText "GAME OVER", @engine.size.x / 2, @engine.size.y / 2
       context.font = "18px Arial"
       context.fillText "space to restart", \
@@ -161,7 +162,7 @@ class Game
     @engine.drawFps()
 
 
-Chem.onReady ->
+chem.onReady ->
   canvas = document.getElementById("game")
   engine = new Engine(canvas)
   canvas.focus()

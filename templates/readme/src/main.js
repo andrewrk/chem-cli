@@ -1,46 +1,45 @@
-//depend "chem"
+var chem = require("chem");
+var Vec2d = chem.vec2d;
 
-var Vec2d = Chem.Vec2d;
-
-Chem.onReady(function () {
+chem.onReady(function () {
     var canvas = document.getElementById("game");
-    var engine = new Chem.Engine(canvas);
-    var batch = new Chem.Batch();
-    var boom = new Chem.Sound('sfx/boom.ogg');
-    var ship = new Chem.Sprite('ship', {
+    var engine = new chem.Engine(canvas);
+    var batch = new chem.Batch();
+    var boom = new chem.Sound('sfx/boom.ogg');
+    var ship = new chem.Sprite('ship', {
         batch: batch,
         pos: new Vec2d(200, 200),
         rotation: Math.PI / 2
     });
-    var ship_vel = new Vec2d();
-    var rotation_speed = Math.PI * 0.04;
-    var thrust_amt = 0.1;
+    var shipVel = new Vec2d();
+    var rotationSpeed = Math.PI * 0.04;
+    var thrustAmt = 0.1;
     engine.on('update', function (dt, dx) {
-        ship.pos.add(ship_vel);
+        ship.pos.add(shipVel);
 
         // rotate the ship with left and right arrow keys
-        if (engine.buttonState(Chem.Button.Key_Left)) {
-            ship.rotation -= rotation_speed * dx;
+        if (engine.buttonState(chem.button.KeyLeft)) {
+            ship.rotation -= rotationSpeed * dx;
         }
-        if (engine.buttonState(Chem.Button.Key_Right)) {
-            ship.rotation += rotation_speed * dx;
+        if (engine.buttonState(chem.button.KeyRight)) {
+            ship.rotation += rotationSpeed * dx;
         }
 
         // apply forward and backward thrust with up and down arrow keys
         var thrust = new Vec2d(Math.cos(ship.rotation), Math.sin(ship.rotation));
-        if (engine.buttonState(Chem.Button.Key_Up)) {
-            ship_vel.add(thrust.scaled(thrust_amt * dx));
+        if (engine.buttonState(chem.button.KeyUp)) {
+            shipVel.add(thrust.scaled(thrustAmt * dx));
         }
-        if (engine.buttonState(Chem.Button.Key_Down)) {
-            ship_vel.sub(thrust.scaled(thrust_amt * dx));
+        if (engine.buttonState(chem.button.KeyDown)) {
+            shipVel.sub(thrust.scaled(thrustAmt * dx));
         }
 
         // press space to blow yourself up
-        if (engine.buttonJustPressed(Chem.Button.Key_Space)) {
+        if (engine.buttonJustPressed(chem.button.KeySpace)) {
             boom.play();
             ship.setAnimationName('boom');
             ship.setFrameIndex(0);
-            ship.on('animation_end', function() {
+            ship.on('animationend', function() {
                 ship.delete();
             });
         }
