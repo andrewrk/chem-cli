@@ -1,5 +1,5 @@
 # the main source file which depends on the rest of your source files.
-exports.main = 'src/main'
+exports.main = 'src/main.coffee'
 
 exports.spritesheet =
   defaults:

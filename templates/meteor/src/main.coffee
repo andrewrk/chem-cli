@@ -1,7 +1,6 @@
 chem = require 'chem'
 
-{Engine, Sprite, Batch, button} = chem
-Vec2d = chem.vec2d.Vec2d
+{vec2d, Engine, Sprite, Batch, button} = chem
 
 randInt = (min, max) -> Math.floor(min + Math.random() * (max - min + 1))
 
@@ -30,9 +29,9 @@ class Game
     ]
     @ship = new Sprite 'ship',
       batch: @batch
-      pos: new Vec2d(0, @engine.size.y / 2)
+      pos: vec2d(0, @engine.size.y / 2)
       zOrder: 2
-    @shipVel = new Vec2d()
+    @shipVel = vec2d()
 
     @meteorInterval = 0.3
     @nextMeteorAt = @meteorInterval
@@ -50,17 +49,17 @@ class Game
   createStar: ->
     sprite = new Sprite @imgStar[randInt(0, 1)],
       batch: @batch
-      pos: new Vec2d(@engine.size.x, randInt(0, @engine.size.y))
+      pos: vec2d(@engine.size.x, randInt(0, @engine.size.y))
       zOrder: 0
-    obj = new MovingSprite(sprite, new Vec2d(-400 + Math.random() * 200, 0))
+    obj = new MovingSprite(sprite, vec2d(-400 + Math.random() * 200, 0))
     @stars.push(obj)
 
   createMeteor: ->
     sprite = new Sprite @imgMeteor[randInt(0, 1)],
       batch: @batch
-      pos: new Vec2d(@engine.size.x, randInt(0, @engine.size.y))
+      pos: vec2d(@engine.size.x, randInt(0, @engine.size.y))
       zOrder: 1
-    obj = new MovingSprite(sprite, new Vec2d(-600 + Math.random() * 400, -200 + Math.random() * 400))
+    obj = new MovingSprite(sprite, vec2d(-600 + Math.random() * 400, -200 + Math.random() * 400))
     @meteors.push(obj)
 
   update: (dt) =>

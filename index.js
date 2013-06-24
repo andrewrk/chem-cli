@@ -8,6 +8,10 @@ var fs = require('fs')
   , spawn = require('child_process').spawn
   , browserify = require('browserify')
   , watchify = require('watchify')
+  , cocoify = require('cocoify')
+  , icsify = require('icsify')
+  , liveify = require('liveify')
+  , coffeeify = require('coffeeify')
   , express = require('express')
   , optimist = require('optimist')
   , Spritesheet = require('spritesheet')
@@ -17,6 +21,12 @@ var fs = require('fs')
   , spritesheetOut = userPath("./public/spritesheet.png")
   , animationsJsonOut = userPath("./public/animations.json")
   , objHasOwn = {}.hasOwnProperty;
+
+// allow us to require non-js chemfiles
+require('coco');
+require('coffee-script');
+require('LiveScript');
+require('iced-coffee-script');
 
 var allOutFiles = [
   clientOut,
@@ -73,7 +83,14 @@ function extend(obj, src){
   return obj;
 }
 function getChemfilePath (){
-  return path.join(userPath("."), "chemfile.js");
+  var files = fs.readdirSync(userPath("."));
+  for (var i = 0; i < files.length; ++i) {
+    var file = files[i];
+    if (/^chemfile\./.test(file)) {
+      return path.join(userPath("."), file);
+    }
+  }
+  return null;
 }
 function forceRequireChemfile (){
   var chemPath = path.resolve(getChemfilePath());
@@ -111,6 +128,11 @@ function compileClientSource (options){
   var chemfile = forceRequireChemfile();
   var compile = options.watch ? watchify : browserify;
   var b = compile(userPath(chemfile.main));
+  b.transform(coffeeify);
+  //Uncomment when icsify no longer tries to run its filter for .coffee files
+  //b.transform(icsify);
+  b.transform(liveify);
+  b.transform(cocoify);
   if (options.watch) {
     b.on('update', writeBundle);
     writeBundle();

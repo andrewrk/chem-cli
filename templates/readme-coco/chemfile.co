@@ -1,9 +1,5 @@
-# extra folders to look for source files
-# you can use #depend statements to include any source files in these folders.
-export libs = []
-
 # the main source file which depends on the rest of your source files.
-export main = 'src/main'
+export main = 'src/main.co'
 
 export spritesheet =
   defaults:

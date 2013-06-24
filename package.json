@@ -1,6 +1,6 @@
 {
   "name": "chem-cli",
-  "description": "html5 canvas game engine optimized for rapid development",
+  "description": "html5 canvas game engine optimized for rapid development - command line interface",
   "author": "Andrew Kelley <superjoe30@gmail.com>",
   "version": "0.3.0",
   "license": "MIT",
@@ -18,7 +18,15 @@
     "batch": "~0.3.2",
     "findit": "~0.1.2",
     "browserify": "~2.20.1",
-    "watchify": "0.0.1"
+    "watchify": "0.0.1",
+    "coco": "~0.9.1",
+    "coffee-script": "~1.6.3",
+    "iced-coffee-script": "~1.6.2d",
+    "cocoify": "0.0.1",
+    "coffeeify": "~0.5.1",
+    "liveify": "~0.3.0",
+    "icsify": "0.0.4",
+    "LiveScript": "~1.1.1"
   },
   "bin": {
     "chem": "./index.js"
