@@ -18,3 +18,13 @@ See [chem](http://github.com/superjoe30/chem)
     # see more commands
     chem
     
+## Release Notes
+
+### 0.4.1
+
+ * `chem init` creates package.json and initializes node_modules
+   for you
+
+### 0.4.0
+
+ * Split CLI into this separate package
