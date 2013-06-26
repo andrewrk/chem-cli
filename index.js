@@ -13,6 +13,7 @@ var fs = require('fs')
   , liveify = require('liveify')
   , coffeeify = require('coffeeify')
   , express = require('express')
+  , noCacheMiddleware = require('connect-nocache')()
   , optimist = require('optimist')
   , Spritesheet = require('spritesheet')
   , Batch = require('batch')
@@ -148,6 +149,7 @@ function compileClientSource (options){
 function serveStaticFiles (port){
   var app = express();
   var publicDir = userPath("./public");
+  app.use(noCacheMiddleware);
   app.use(express.static(publicDir));
   app.listen(port, function() {
     console.info("Serving at http://0.0.0.0:" + port);

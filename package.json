@@ -26,7 +26,8 @@
     "coffeeify": "~0.5.1",
     "liveify": "~0.3.0",
     "icsify": "0.0.4",
-    "LiveScript": "~1.1.1"
+    "LiveScript": "~1.1.1",
+    "connect-nocache": "~1.0.1"
   },
   "bin": {
     "chem": "./index.js"
