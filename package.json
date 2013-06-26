@@ -11,10 +11,10 @@
   },
   "dependencies": {
     "optimist": "~0.3.4",
-    "vec2d": "~0.1.1",
+    "vec2d": "~0.1.2",
     "chokidar": "~0.6.2",
     "express": "~3.1.1",
-    "spritesheet": "0.0.2",
+    "spritesheet": "0.0.4",
     "batch": "~0.3.2",
     "findit": "~0.1.2",
     "browserify": "~2.20.1",
@@ -27,7 +27,9 @@
     "liveify": "~0.3.0",
     "icsify": "0.0.4",
     "LiveScript": "~1.1.1",
-    "connect-nocache": "~1.0.1"
+    "connect-nocache": "~1.0.1",
+    "ncp": "~0.4.2",
+    "chem": "~0.4.2"
   },
   "bin": {
     "chem": "./index.js"

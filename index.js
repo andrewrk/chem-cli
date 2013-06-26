@@ -2,10 +2,11 @@
 
 var fs = require('fs')
   , path = require('path')
+  , Batch = require('batch')
   , chokidar = require('chokidar')
   , Vec2d = require('vec2d').Vec2d
   , findit = require('findit')
-  , spawn = require('child_process').spawn
+  , ncp = require('ncp').ncp
   , browserify = require('browserify')
   , watchify = require('watchify')
   , cocoify = require('cocoify')
@@ -21,6 +22,8 @@ var fs = require('fs')
   , imgPath = userPath("./assets/img")
   , spritesheetOut = userPath("./public/spritesheet.png")
   , animationsJsonOut = userPath("./public/animations.json")
+  , chemCliPackageJson = require(path.join(__dirname, "package.json"))
+  , chemPackageJson = require(path.join(__dirname, "node_modules", "chem", "package.json"))
   , objHasOwn = {}.hasOwnProperty;
 
 // allow us to require non-js chemfiles
@@ -36,34 +39,123 @@ var allOutFiles = [
 ];
 
 var tasks = {
-  help: function(){
-    process.stderr.write("Usage: \n\n  # create a new project\n  # possible templates are: meteor, readme, readme-coco\n  \n  chem init <your_project_name> [--example <template>]\n\n\n  # run a development server which will automatically recompile your code,\n  # generate your spritesheets, and serve your assets\n  \n  chem dev\n\n\n  # delete all generated files\n\n  chem clean\n");
-  },
-  init: function(args, argv){
-    var projectName = args[0];
-    var template = argv.example || "readme";
-    if (projectName == null) {
-      tasks.help();
-      process.exit(1);
-      return;
-    }
-    var src = chemPath("templates/" + template);
-    // copy files from template to projectName
-    exec('cp', ['-r', src, projectName]);
-  },
-  dev: function(args, options){
-    serveStaticFiles(options.port || 10308);
-    compileClientSource({
-      watch: true
-    });
-    watchSpritesheet();
-  },
-  clean: function(){
-    exec('rm', ['-f'].concat(allOutFiles));
-  }
+  help: cmdHelp,
+  init: cmdInit,
+  dev: cmdDev,
+  clean: cmdClean,
 };
 
 run();
+
+function cmdInit(args, argv) {
+  var projectName = args[0];
+  var template = argv.example || "readme";
+  if (projectName == null) {
+    cmdHelp();
+    process.exit(1);
+    return;
+  }
+  var src = chemPath("templates/" + template);
+  // copy files from template to projectName
+  ncp(src, projectName, function(err) {
+    if (err) {
+      console.error("Error copying files:", err.stack);
+      return;
+    }
+    // init package.json
+    var packageJson = {
+      name: projectName,
+      version: "0.0.0",
+      description: "game prototype using chem game engine",
+      scripts: {
+        "dev": "npm install && chem dev"
+      },
+      dependencies: {
+        "chem": "~" + chemPackageJson.version,
+        "chem-cli": "~" + chemCliPackageJson.version,
+      }
+    };
+    var batch = new Batch();
+    batch.push(function(cb) {
+      fs.writeFile(path.join(projectName, "package.json"), JSON.stringify(packageJson, null, 2), cb);
+    });
+    batch.push(function(cb) {
+      // populate the node_modules folder
+      var destNodeModules = path.join(projectName, "node_modules");
+      fs.mkdir(destNodeModules, function(err) {
+        if (err) return cb(err);
+        var batch = new Batch();
+        batch.push(function(cb) {
+          ncp(__dirname, path.join(destNodeModules, "chem-cli"), function(err) {
+            if (err) return cb(err);
+            fs.mkdir(path.join(destNodeModules, ".bin"), function(err) {
+              if (err) return cb(err);
+              fs.symlink( path.join("..", "chem-cli", "index.js"),path.join(destNodeModules, ".bin", "chem"), cb);
+            });
+          });
+        });
+        batch.push(function(cb) {
+          ncp(path.join(__dirname, "node_modules", "chem"), path.join(destNodeModules, "chem"), function(err) {
+            if (err) return cb(err);
+            // because the vec2d dep is shared, chem-cli does not have it in node_modules. so we hax.
+            var destChemNodeModules = path.join(destNodeModules, "chem", "node_modules");
+            fs.mkdir(destChemNodeModules, function(err) {
+              if (err) return cb(err);
+              ncp(path.join(__dirname, "node_modules", "vec2d"), path.join(destChemNodeModules, "vec2d"), cb);
+            });
+          });
+        });
+        batch.end(cb);
+      });
+    });
+    batch.end(function(err) {
+      if (err) {
+        console.error("Error setting up:", err.stack);
+        return;
+      }
+      process.stderr.write("Done. Next, try these commands:\n\n" +
+        "  cd " + projectName + "\n" +
+        "  npm run dev\n");
+    });
+  });
+}
+
+function cmdDev(args, options){
+  serveStaticFiles(options.port || 10308);
+  compileClientSource({
+    watch: true
+  });
+  watchSpritesheet();
+}
+
+function cmdClean() {
+  var batch = new Batch();
+  allOutFiles.forEach(function(outFile) {
+    batch.push(function(done) {
+      fs.unlink(outFile, done);
+    });
+  });
+  batch.end(function(err) {
+    if (err) {
+      console.error("Error deleting files:", err.stack);
+    }
+  });
+}
+
+function cmdHelp(){
+  process.stderr.write(
+    "Usage: \n\n" +
+    "  # create a new project\n" +
+    "  # possible templates are: meteor, readme, readme-coco\n" +
+    "  \n" +
+    "  chem init <your_project_name> [--example <template>]\n\n\n" +
+    "  # run a development server which will automatically recompile your code,\n" +
+    "  # generate your spritesheets, and serve your assets\n" +
+    "  \n" +
+    "  chem dev\n\n\n" +
+    "  # delete all generated files\n\n" +
+    "  chem clean\n");
+}
 
 function run(){
   var argv = optimist.argv;
@@ -75,6 +167,7 @@ function run(){
     tasks.help();
   }
 }
+
 function extend(obj, src){
   for (var key in src) {
     if (objHasOwn.call(src, key)) {
@@ -83,6 +176,7 @@ function extend(obj, src){
   }
   return obj;
 }
+
 function getChemfilePath (){
   var files = fs.readdirSync(userPath("."));
   for (var i = 0; i < files.length; ++i) {
@@ -93,38 +187,21 @@ function getChemfilePath (){
   }
   return null;
 }
+
 function forceRequireChemfile (){
   var chemPath = path.resolve(getChemfilePath());
   var reqPath = chemPath.substring(0, chemPath.length - path.extname(chemPath).length);
   return forceRequire(reqPath);
 }
+
 function chemPath (file){
   return path.join(__dirname, file);
 }
+
 function userPath (file){
   return path.join(process.cwd(), file);
 }
-function sign (x){
-  if (x > 0) {
-    return 1;
-  } else if (x < 0) {
-    return -1;
-  } else {
-    return 0;
-  }
-}
-function exec (cmd, args, cb){
-  args = args || [];
-  cb = cb || noop;
-  var bin = spawn(cmd, args, {stdio: 'inherit'});
-  bin.on('exit', function(code) {
-    if (code !== 0) {
-      cb(new Error(cmd + " exit code " + code));
-    } else {
-      cb();
-    }
-  });
-}
+
 function compileClientSource (options){
   var chemfile = forceRequireChemfile();
   var compile = options.watch ? watchify : browserify;
@@ -146,6 +223,7 @@ function compileClientSource (options){
     b.bundle().pipe(fs.createWriteStream(clientOut));
   }
 }
+
 function serveStaticFiles (port){
   var app = express();
   var publicDir = userPath("./public");
@@ -155,6 +233,7 @@ function serveStaticFiles (port){
     console.info("Serving at http://0.0.0.0:" + port);
   });
 }
+
 function watchSpritesheet (){
   // redo the spritesheet when any files change
   // always compile and watch on first run
@@ -203,11 +282,13 @@ function watchSpritesheet (){
     }
   }
 }
+
 function forceRequire (modulePath){
   var resolvedPath = require.resolve(modulePath);
   delete require.cache[resolvedPath];
   return require(modulePath);
 }
+
 function cmpStr (a, b){
   if (a < b) {
     return -1;
@@ -217,6 +298,7 @@ function cmpStr (a, b){
     return 0;
   }
 }
+
 function getAllImgFiles(cb) {
   var files = [];
   var finder = findit.find(imgPath);
@@ -228,6 +310,7 @@ function getAllImgFiles(cb) {
     cb(null, files);
   });
 }
+
 function filesFromAnimFrames (frames, animName, allImgFiles){
   frames = frames || animName;
   if (typeof frames === 'string') {
@@ -246,6 +329,7 @@ function filesFromAnimFrames (frames, animName, allImgFiles){
     });
   }
 }
+
 function createSpritesheet(cb) {
   var spritesheet = forceRequireChemfile().spritesheet;
   if (spritesheet == null) return [];
@@ -308,6 +392,7 @@ function createSpritesheet(cb) {
     };
   }
 }
+
 function computeAnchor(anim){
   switch (anim.anchor) {
   case 'center':
@@ -332,9 +417,7 @@ function computeAnchor(anim){
     return anim.anchor
   }
 }
-function noop(err) {
-  if (err) throw err;
-}
+
 function watchFilesOnce(files, cb) {
   var watcher = chokidar.watch(files, {ignored: /^\./, persistent: true});
   watcher.on('change', function() {
@@ -343,4 +426,3 @@ function watchFilesOnce(files, cb) {
   });
   return watcher;
 }
-
