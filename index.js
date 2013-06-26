@@ -41,11 +41,22 @@ var allOutFiles = [
 var tasks = {
   help: cmdHelp,
   init: cmdInit,
+  list: cmdList,
   dev: cmdDev,
   clean: cmdClean,
 };
 
 run();
+
+function cmdList(args, argv) {
+  fs.readdir(path.join(__dirname, "templates"), function(err, files) {
+    if (err) {
+      console.error("Error reading templates:", err.stack);
+      return;
+    }
+    console.log(files.join("\n"));
+  });
+}
 
 function cmdInit(args, argv) {
   var projectName = args[0];
@@ -146,13 +157,11 @@ function cmdHelp(){
   process.stderr.write(
     "Usage: \n\n" +
     "  # create a new project\n" +
-    "  # possible templates are: meteor, readme, readme-coco\n" +
-    "  \n" +
-    "  chem init <your_project_name> [--example <template>]\n\n\n" +
+    "  # `chem list` to see a list of templates to choose from\n\n" +
+    "  chem init <your_project_name> [--example <template>]\n\n" +
     "  # run a development server which will automatically recompile your code,\n" +
-    "  # generate your spritesheets, and serve your assets\n" +
-    "  \n" +
-    "  chem dev\n\n\n" +
+    "  # generate your spritesheets, and serve your assets\n\n" +
+    "  chem dev\n\n" +
     "  # delete all generated files\n\n" +
     "  chem clean\n");
 }
