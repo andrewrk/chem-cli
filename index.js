@@ -23,7 +23,7 @@ var fs = require('fs')
   , spritesheetOut = userPath("./public/spritesheet.png")
   , animationsJsonOut = userPath("./public/animations.json")
   , chemCliPackageJson = require(path.join(__dirname, "package.json"))
-  , chemPackageJson = require(path.join(__dirname, "node_modules", "chem", "package.json"))
+  , chemPackageJson = require(path.join(path.dirname(require.resolve("chem")), "package.json"))
   , objHasOwn = {}.hasOwnProperty;
 
 // allow us to require non-js chemfiles
