@@ -20,6 +20,10 @@ See [chem](http://github.com/superjoe30/chem)
     
 ## Release Notes
 
+### 0.4.2
+
+ * fixed #1
+
 ### 0.4.1
 
  * `chem init` creates package.json and initializes node_modules
