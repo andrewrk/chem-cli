@@ -1,30 +1,31 @@
 #!/usr/bin/env node
 
-var fs = require('fs')
-  , path = require('path')
-  , Batch = require('batch')
-  , chokidar = require('chokidar')
-  , Vec2d = require('vec2d').Vec2d
-  , findit = require('findit')
-  , ncp = require('ncp').ncp
-  , browserify = require('browserify')
-  , watchify = require('watchify')
-  , cocoify = require('cocoify')
-  , icsify = require('icsify')
-  , liveify = require('liveify')
-  , coffeeify = require('coffeeify')
-  , express = require('express')
-  , noCacheMiddleware = require('connect-nocache')()
-  , optimist = require('optimist')
-  , Spritesheet = require('spritesheet')
-  , Batch = require('batch')
-  , clientOut = userPath("./public/main.js")
-  , imgPath = userPath("./assets/img")
-  , spritesheetOut = userPath("./public/spritesheet.png")
-  , animationsJsonOut = userPath("./public/animations.json")
-  , chemCliPackageJson = require(path.join(__dirname, "package.json"))
-  , chemPackageJson = require(path.join(path.dirname(require.resolve("chem")), "package.json"))
-  , objHasOwn = {}.hasOwnProperty;
+var fs = require('fs');
+var path = require('path');
+var child_process = require('child_process');
+var Batch = require('batch');
+var chokidar = require('chokidar');
+var Vec2d = require('vec2d').Vec2d;
+var findit = require('findit');
+var ncp = require('ncp').ncp;
+var browserify = require('browserify');
+var watchify = require('watchify');
+var cocoify = require('cocoify');
+var icsify = require('icsify');
+var liveify = require('liveify');
+var coffeeify = require('coffeeify');
+var express = require('express');
+var noCacheMiddleware = require('connect-nocache')();
+var optimist = require('optimist');
+var Spritesheet = require('spritesheet');
+
+var clientOut = userPath("./public/main.js");
+var imgPath = userPath("./assets/img");
+var spritesheetOut = userPath("./public/spritesheet.png");
+var animationsJsonOut = userPath("./public/animations.json");
+var chemCliPackageJson = require(path.join(__dirname, "package.json"));
+var chemPackageJson = require(path.join(path.dirname(require.resolve("chem")), "package.json"));
+var objHasOwn = {}.hasOwnProperty;
 
 // allow us to require non-js chemfiles
 require('coco');
@@ -59,21 +60,23 @@ function cmdList(args, argv) {
 }
 
 function cmdInit(args, argv) {
-  var projectName = args[0];
-  var template = argv.example || "readme";
-  if (projectName == null) {
+  if (args.length > 0) {
     cmdHelp();
     process.exit(1);
-    return;
   }
-  var src = chemPath("templates/" + template);
-  // copy files from template to projectName
-  ncp(src, projectName, function(err) {
-    if (err) {
-      console.error("Error copying files:", err.stack);
-      return;
-    }
-    // init package.json
+  var projectName = path.basename(path.resolve("."));
+  var template = argv.example || "readme";
+
+  var batch = new Batch();
+  batch.push(copyTemplate);
+  batch.push(initPackageJson);
+  batch.end(batchEnd);
+
+  function copyTemplate(cb) {
+    var src = chemPath("templates/" + template);
+    ncp(src, ".", cb);
+  }
+  function initPackageJson(cb) {
     var packageJson = {
       name: projectName,
       version: "0.0.0",
@@ -82,53 +85,32 @@ function cmdInit(args, argv) {
         "dev": "npm install && chem dev"
       },
       dependencies: {
-        "chem": "~" + chemPackageJson.version,
+        // chem will be installed with npm install --save
+        // chem-cli is assumed to already be installed
         "chem-cli": "~" + chemCliPackageJson.version,
       }
     };
-    var batch = new Batch();
-    batch.push(function(cb) {
-      fs.writeFile(path.join(projectName, "package.json"), JSON.stringify(packageJson, null, 2), cb);
+    fs.writeFile("package.json", JSON.stringify(packageJson, null, 2), function(err) {
+      if (err) return cb(err);
+      installChem(cb);
     });
-    batch.push(function(cb) {
-      // populate the node_modules folder
-      var destNodeModules = path.join(projectName, "node_modules");
-      fs.mkdir(destNodeModules, function(err) {
-        if (err) return cb(err);
-        var batch = new Batch();
-        batch.push(function(cb) {
-          ncp(__dirname, path.join(destNodeModules, "chem-cli"), function(err) {
-            if (err) return cb(err);
-            fs.mkdir(path.join(destNodeModules, ".bin"), function(err) {
-              if (err) return cb(err);
-              fs.symlink( path.join("..", "chem-cli", "index.js"),path.join(destNodeModules, ".bin", "chem"), cb);
-            });
-          });
-        });
-        batch.push(function(cb) {
-          ncp(path.join(__dirname, "node_modules", "chem"), path.join(destNodeModules, "chem"), function(err) {
-            if (err) return cb(err);
-            // because the vec2d dep is shared, chem-cli does not have it in node_modules. so we hax.
-            var destChemNodeModules = path.join(destNodeModules, "chem", "node_modules");
-            fs.mkdir(destChemNodeModules, function(err) {
-              if (err) return cb(err);
-              ncp(path.join(__dirname, "node_modules", "vec2d"), path.join(destChemNodeModules, "vec2d"), cb);
-            });
-          });
-        });
-        batch.end(cb);
-      });
+  }
+  function installChem(cb) {
+    var cmd = ("npm install --save chem@" + chemPackageJson.version).split(" ");
+    var child = child_process.spawn(cmd[0], cmd.slice(1));
+    child.on('exit', function(code) {
+      if (code) cb(new Error("error code " + code + " from: " + cmd.join(" ")));
+      cb();
     });
-    batch.end(function(err) {
-      if (err) {
-        console.error("Error setting up:", err.stack);
-        return;
-      }
-      process.stderr.write("Done. Next, try these commands:\n\n" +
-        "  cd " + projectName + "\n" +
-        "  npm run dev\n");
-    });
-  });
+  }
+  function batchEnd(err) {
+    if (err) {
+      console.error("Error setting up:", err.stack);
+      return;
+    }
+    process.stderr.write("Done. Next, try this command:\n\n" +
+      "  npm run dev\n");
+  }
 }
 
 function cmdDev(args, options){
@@ -156,9 +138,10 @@ function cmdClean() {
 function cmdHelp(){
   process.stderr.write(
     "Usage: \n\n" +
-    "  # create a new project\n" +
+    "  # create a new project in the current directory\n" +
+    "  # project name is assumed to be the name of the current directory\n" +
     "  # `chem list` to see a list of templates to choose from\n\n" +
-    "  chem init <your_project_name> [--example <template>]\n\n" +
+    "  chem init [--example <template>]\n\n" +
     "  # run a development server which will automatically recompile your code,\n" +
     "  # generate your spritesheets, and serve your assets\n\n" +
     "  chem dev\n\n" +

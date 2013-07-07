@@ -4,19 +4,23 @@ See [chem](http://github.com/superjoe30/chem)
 
 ## Usage
 
-    # install chem
+    # install dependencies in ubuntu
     sudo apt-get install libcairo2-dev
-    sudo npm install -g chem
 
-    # create a new project
-    chem init <your_project_name>
+    # start with a nearly-empty project,
+    # such as a freshly created project from github with only a .git/ and README.md.
+    cd my-project
+
+    # init the project with chem-cli
+    npm install chem-cli
+    ./node_modules/.bin/chem init
 
     # run a development server which will automatically recompile your code,
     # generate your spritesheets, and serve your assets
-    chem dev
+    ./node_modules/.bin/chem dev
 
     # see more commands
-    chem
+    ./node_modules/.bin/chem
     
 ## Release Notes
 
