@@ -15,9 +15,10 @@ See [chem](http://github.com/superjoe30/chem)
     npm install chem-cli
     ./node_modules/.bin/chem init
 
-    # run a development server which will automatically recompile your code,
-    # generate your spritesheets, and serve your assets
-    ./node_modules/.bin/chem dev
+    # the `dev` command will run a development server which will automatically recompile your code,
+    # generate your spritesheets, and serve your assets.
+    # after running `init` above, simply:
+    npm run dev
 
     # see more commands
     ./node_modules/.bin/chem
