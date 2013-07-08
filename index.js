@@ -69,12 +69,23 @@ function cmdInit(args, argv) {
 
   var batch = new Batch();
   batch.push(copyTemplate);
+  batch.push(installGitIgnore);
   batch.push(initPackageJson);
   batch.end(batchEnd);
 
   function copyTemplate(cb) {
     var src = chemPath("templates/" + template);
     ncp(src, ".", cb);
+  }
+  function installGitIgnore(cb) {
+    // can't get `npm publish` to accept a file called `.gitignore`,
+    // even if it's in a subdirectory, like the template we just copied.
+    // see https://github.com/isaacs/npm/issues/1862
+    var content = "/node_modules\n" +
+      "/public/spritesheet.png\n" +
+      "/public/animations.json\n" +
+      "/public/main.js\n";
+    fs.writeFile(".gitignore", content, cb);
   }
   function initPackageJson(cb) {
     var packageJson = {
