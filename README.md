@@ -25,6 +25,10 @@ See [chem](http://github.com/superjoe30/chem)
     
 ## Release Notes
 
+### 0.5.1
+
+ * fixed #2
+
 ### 0.5.0
 
  * `init` uses current directory instead of creating a project directory
