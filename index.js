@@ -233,7 +233,7 @@ function serveStaticFiles (port){
   app.use(noCacheMiddleware);
   app.use(express.static(publicDir));
   app.listen(port, function() {
-    console.info("Serving at http://0.0.0.0:" + port);
+    console.info("Serving at http://0.0.0.0:" + port + "/");
   });
 }
 
