@@ -11,6 +11,7 @@ chem.onReady !->
   shipVel = Vec2d()
   const rotationSpeed = Math.PI * 0.04
   const thrustAmt = 0.1
+  fpsLabel = engine.createFpsLabel()
   engine.on \update, !(dt, dx) ->
     ship.pos.add(shipVel)
 
@@ -39,10 +40,9 @@ chem.onReady !->
     context.fillRect(0, 0, engine.size.x, engine.size.y)
 
     # draw all sprites in batch
-    engine.draw(batch)
+    batch.draw(context)
 
     # draw a little fps counter in the corner
-    context.fillStyle = '#ffffff'
-    engine.drawFps()
+    fpsLabel.draw(context)
   engine.start()
   canvas.focus()

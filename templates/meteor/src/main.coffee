@@ -1,6 +1,6 @@
 chem = require 'chem'
 
-{vec2d, Engine, Sprite, Batch, button} = chem
+{vec2d, Engine, Sprite, Label, Batch, button} = chem
 
 randInt = (min, max) -> Math.floor(min + Math.random() * (max - min + 1))
 
@@ -41,6 +41,30 @@ class Game
 
     @score = 0
 
+    @scoreLabel = new Label "Score: 0",
+      batch: @batch
+      pos: vec2d(0, 30)
+      zOrder: 3
+      font: "30px Arial"
+      fillStyle: "#ffffff"
+    @gameOverLabel = new Label "GAME OVER",
+      batch: @batch
+      pos: @engine.size.scaled(0.5)
+      textAlign: 'center'
+      zOrder: 3
+      font: "30px Arial"
+      fillStyle: "#ffffff"
+      visible: false
+    @spaceToRestartLabel = new Label "space to restart",
+      batch: @batch
+      pos: @engine.size.scaled(0.5).offset(0, 70)
+      textAlign: 'center'
+      zOrder: 3
+      font: "18px Arial"
+      fillStyle: "#ffffff"
+      visible: false
+    @fpsLabel = @engine.createFpsLabel()
+
   start: ->
     @engine.on('draw', @draw)
     @engine.on('update', @update)
@@ -70,6 +94,7 @@ class Game
     else
       scorePerSec = 60
       @score += scorePerSec * dt
+      @scoreLabel.text = "Score: #{Math.floor(@score)}"
 
     @nextMeteorAt -= dt
     if @nextMeteorAt <= 0
@@ -138,6 +163,8 @@ class Game
     if @hadGameOver
       return
     @hadGameOver = true
+    @gameOverLabel.setVisible(true)
+    @spaceToRestartLabel.setVisible(true)
     @ship.setAnimationName('explosion')
     @ship.setFrameIndex(0)
     @ship.on 'animationend', => @ship.delete()
@@ -145,20 +172,8 @@ class Game
   draw: (context) =>
     context.fillStyle = '#000000'
     context.fillRect 0, 0, @engine.size.x, @engine.size.y
-    @engine.draw @batch
-    context.fillStyle = "#ffffff"
-    context.font = "30px Arial"
-    context.fillText "Score: #{Math.floor(@score)}", 0, 30
-    if @hadGameOver
-      context.fillText "GAME OVER", @engine.size.x / 2, @engine.size.y / 2
-      context.font = "18px Arial"
-      context.fillText "space to restart", \
-        @engine.size.x / 2, \
-        @engine.size.y / 2 + 70
-
-    context.font = "12px Arial"
-    context.fillStyle = '#ffffff'
-    @engine.drawFps()
+    @batch.draw context
+    @fpsLabel.draw context
 
 
 chem.onReady ->
@@ -167,4 +182,5 @@ chem.onReady ->
   canvas.focus()
   game = new Game(engine)
   game.start()
+
 

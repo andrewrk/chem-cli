@@ -4,24 +4,26 @@ See [chem](http://github.com/superjoe30/chem)
 
 ## Usage
 
-    # install dependencies in ubuntu
-    sudo apt-get install libcairo2-dev
+```bash
+# install dependencies in ubuntu
+sudo apt-get install libcairo2-dev
 
-    # start with a nearly-empty project,
-    # such as a freshly created project from github with only a .git/ and README.md.
-    cd my-project
+# start with a nearly-empty project, such as a freshly created project
+# from github with only a .git/ and README.md.
+cd my-project
 
-    # init the project with chem-cli
-    npm install chem-cli
-    ./node_modules/.bin/chem init
+# init the project with chem-cli
+npm install chem-cli
+./node_modules/.bin/chem init
 
-    # the `dev` command will run a development server which will automatically recompile your code,
-    # generate your spritesheets, and serve your assets.
-    # after running `init` above, simply:
-    npm run dev
+# the `dev` command will run a development server which will automatically
+# recompile your code, generate your spritesheets, and serve your assets.
+# after running `init` above, simply:
+npm run dev
 
-    # see more commands
-    ./node_modules/.bin/chem
+# see more commands
+./node_modules/.bin/chem
+```
     
 ## Release Notes
 

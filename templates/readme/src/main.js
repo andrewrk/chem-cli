@@ -1,5 +1,5 @@
 var chem = require("chem");
-var Vec2d = chem.vec2d;
+var v = chem.vec2d;
 
 chem.onReady(function () {
   var canvas = document.getElementById("game");
@@ -8,12 +8,13 @@ chem.onReady(function () {
   var boom = new chem.Sound('sfx/boom.ogg');
   var ship = new chem.Sprite('ship', {
     batch: batch,
-    pos: new Vec2d(200, 200),
+    pos: v(200, 200),
     rotation: Math.PI / 2
   });
-  var shipVel = new Vec2d();
+  var shipVel = v();
   var rotationSpeed = Math.PI * 0.04;
   var thrustAmt = 0.1;
+  var fpsLabel = engine.createFpsLabel();
   engine.on('update', function (dt, dx) {
     ship.pos.add(shipVel);
 
@@ -26,7 +27,7 @@ chem.onReady(function () {
     }
 
     // apply forward and backward thrust with up and down arrow keys
-    var thrust = new Vec2d(Math.cos(ship.rotation), Math.sin(ship.rotation));
+    var thrust = v(Math.cos(ship.rotation), Math.sin(ship.rotation));
     if (engine.buttonState(chem.button.KeyUp)) {
       shipVel.add(thrust.scaled(thrustAmt * dx));
     }
@@ -50,11 +51,10 @@ chem.onReady(function () {
     context.fillRect(0, 0, engine.size.x, engine.size.y);
 
     // draw all sprites in batch
-    engine.draw(batch);
+    batch.draw(context);
 
     // draw a little fps counter in the corner
-    context.fillStyle = '#ffffff'
-    engine.drawFps();
+    fpsLabel.draw(context);
   });
   engine.start();
   canvas.focus();
