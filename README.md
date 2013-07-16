@@ -27,6 +27,10 @@ npm run dev
     
 ## Release Notes
 
+### 0.5.2
+
+ * update templates to chem 0.5.0
+
 ### 0.5.1
 
  * fixed #2
