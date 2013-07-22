@@ -90,6 +90,7 @@ function cmdInit(args, argv) {
     var content = "/node_modules\n" +
       "/public/spritesheet.png\n" +
       "/public/animations.json\n" +
+      "/public/bootstrap.js\n" +
       "/public/main.js\n";
     fs.writeFile(".gitignore", content, cb);
   }
