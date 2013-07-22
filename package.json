@@ -29,7 +29,7 @@
     "LiveScript": "~1.1.1",
     "connect-nocache": "~1.0.1",
     "ncp": "~0.4.2",
-    "chem": "~0.5.0"
+    "chem": "~0.6.0"
   },
   "bin": {
     "chem": "./index.js"
