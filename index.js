@@ -6,7 +6,7 @@ var child_process = require('child_process');
 var Batch = require('batch');
 var chokidar = require('chokidar');
 var Vec2d = require('vec2d').Vec2d;
-var findit = require('findit');
+var findit = require('findit2');
 var ncp = require('ncp').ncp;
 var browserify = require('browserify');
 var watchify = require('watchify');
@@ -20,9 +20,15 @@ var optimist = require('optimist');
 var Spritesheet = require('spritesheet');
 
 var clientOut = userPath("./public/main.js");
+// spritesheet source
 var imgPath = userPath("./assets/img");
+// static resources
+var publicDir = userPath("./public");
+var textPath = userPath("./public/text");
+var staticImgPath = userPath("./public/img");
 var spritesheetOut = userPath("./public/spritesheet.png");
 var animationsJsonOut = userPath("./public/animations.json");
+var bootstrapJsOut = userPath("./public/bootstrap.js");
 var chemCliPackageJson = require(path.join(__dirname, "package.json"));
 var chemPackageJson = require(path.join(path.dirname(require.resolve("chem")), "package.json"));
 var objHasOwn = {}.hasOwnProperty;
@@ -107,10 +113,16 @@ function cmdInit(args, argv) {
     });
   }
   function installChem(cb) {
-    var cmd = ("npm install --save chem@" + chemPackageJson.version).split(" ");
-    var child = child_process.spawn(cmd[0], cmd.slice(1));
+    var options = {
+      stdio: 'inherit',
+    };
+    var child = child_process.spawn('npm', [
+        'install', '--save', 'chem@' + chemPackageJson.version], options);
     child.on('exit', function(code) {
-      if (code) cb(new Error("error code " + code + " from: " + cmd.join(" ")));
+      if (code) {
+        cb(new Error("error code " + code));
+        return;
+      }
       cb();
     });
   }
@@ -126,6 +138,7 @@ function cmdInit(args, argv) {
 
 function cmdDev(args, options){
   serveStaticFiles(options.port || 10308);
+  watchBootstrap();
   compileClientSource({
     watch: true
   });
@@ -206,30 +219,124 @@ function userPath (file){
 }
 
 function compileClientSource (options){
+  var b = null;
+
+  rewatch();
+
+  function rewatch() {
+    if (b != null) b.removeAllListeners();
+    watchFilesOnce([getChemfilePath()], rewatch);
+
+    var chemfile = forceRequireChemfile();
+    var compile = options.watch ? watchify : browserify;
+    b = compile(userPath(chemfile.main));
+    if (chemfile.autoBootstrap !== false) {
+      b.add(bootstrapJsOut);
+    }
+    b.transform(coffeeify);
+    //Uncomment when icsify no longer tries to run its filter for .coffee files
+    //b.transform(icsify);
+    b.transform(liveify);
+    b.transform(cocoify);
+    if (options.watch) {
+      b.on('update', writeBundle);
+      writeBundle();
+    } else {
+      writeBundle();
+    }
+    function writeBundle() {
+      var timestamp = new Date().toLocaleTimeString();
+      console.info(timestamp + " - generated " + clientOut);
+      b.bundle().pipe(fs.createWriteStream(clientOut));
+    }
+  }
+}
+
+function watchBootstrap() {
+  // this function must generate bootstrapJsOut once and every time
+  // the chemfile updates.
+  rewatch();
+  function recompile() {
+    generateBootstrapJs(function(err) {
+      var timestamp = new Date().toLocaleTimeString();
+      if (err) {
+        console.info(timestamp + " - " + err.stack);
+      } else {
+        console.info(timestamp + " - generated " + bootstrapJsOut);
+      }
+    });
+  }
+  function rewatch() {
+    // list of files to watch
+    var watchFiles = [getChemfilePath()];
+    var watchDirs = [textPath, staticImgPath];
+    watchFilesAndDirsOnce(watchFiles, watchDirs, rewatch);
+    recompile();
+  }
+}
+
+function generateBootstrapJs(cb) {
   var chemfile = forceRequireChemfile();
-  var compile = options.watch ? watchify : browserify;
-  var b = compile(userPath(chemfile.main));
-  b.transform(coffeeify);
-  //Uncomment when icsify no longer tries to run its filter for .coffee files
-  //b.transform(icsify);
-  b.transform(liveify);
-  b.transform(cocoify);
-  if (options.watch) {
-    b.on('update', writeBundle);
-    writeBundle();
-  } else {
-    writeBundle();
+  if (chemfile.autoBootstrap === false) {
+    fs.unlink(bootstrapJsOut, function(err) {
+      if (err && err.code === 'ENOENT') {
+        cb();
+      } else {
+        cb(err);
+      }
+    });
+    return;
   }
-  function writeBundle() {
-    var timestamp = new Date().toLocaleTimeString();
-    console.info(timestamp + " - generated " + clientOut);
-    b.bundle().pipe(fs.createWriteStream(clientOut));
-  }
+  var batch = new Batch();
+  batch.push(function(cb) {
+    getAllTextFiles(cb);
+  });
+  batch.push(function(cb) {
+    getAllStaticImageFiles(cb);
+  });
+  batch.end(function(err, results) {
+    if (err) return cb(err);
+    var allTextFiles = results[0];
+    var allStaticImgFiles = results[1];
+
+    var textObj = {};
+    var textCount = 0;
+    allTextFiles.forEach(function(textFile) {
+      var name = path.relative(textPath, textFile);
+      textObj[name] = path.relative(publicDir, textFile);
+      textCount += 1;
+    });
+
+    var imgObj = {};
+    var imgCount = 0;
+    allStaticImgFiles.forEach(function(imgFile) {
+      var name = path.relative(staticImgPath, imgFile);
+      imgObj[name] = path.relative(publicDir, imgFile);
+      imgCount += 1;
+    });
+
+    var code = "// This code is auto-generated based on your chemfile.\n";
+    code += "// `exports.autoBootstrap = false` to disable this file.\n";
+    code += "var chem = require('chem');\n";
+    if (!chemfile.spritesheet) {
+      code += "chem.resources.useSpritesheet = false;\n";
+    }
+    var json;
+    if (textCount >= 1) {
+      json = JSON.stringify(textObj, null, 2);
+      code += "chem.resources.text = " + json + ";\n";
+    }
+    if (imgCount >= 1) {
+      json = JSON.stringify(imgObj, null, 2);
+      code += "chem.resources.images = " + json + ";\n";
+    }
+    code += "chem.resources.bootstrap();\n";
+    fs.writeFile(bootstrapJsOut, code, cb);
+  });
 }
 
 function serveStaticFiles (port){
   var app = express();
-  var publicDir = userPath("./public");
   app.use(noCacheMiddleware);
   app.use(express.static(publicDir));
   app.listen(port, function() {
@@ -302,16 +409,34 @@ function cmpStr (a, b){
   }
 }
 
-function getAllImgFiles(cb) {
+function getAllTextFiles(cb) {
+  getAllFiles(textPath, cb);
+}
+
+function getAllFiles(dir, cb) {
   var files = [];
-  var finder = findit.find(imgPath);
-  finder.on('error', cb);
+  var finder = findit.find(dir);
+  finder.on('error', function(err) {
+    if (err.code === 'ENOENT') {
+      cb(null, []);
+    } else {
+      cb(err);
+    }
+  });
   finder.on('file', function(file) {
     files.push(file);
   });
   finder.on('end', function() {
     cb(null, files);
   });
+}
+
+function getAllImgFiles(cb) {
+  getAllFiles(imgPath, cb);
+}
+
+function getAllStaticImageFiles(cb) {
+  getAllFiles(staticImgPath, cb);
 }
 
 function filesFromAnimFrames (frames, animName, allImgFiles){
@@ -421,11 +546,33 @@ function computeAnchor(anim){
   }
 }
 
-function watchFilesOnce(files, cb) {
-  var watcher = chokidar.watch(files, {ignored: /^\./, persistent: true});
-  watcher.on('change', function() {
+function watchFilesAndDirsOnce(files, dirs, cb) {
+  var opts = {
+    ignored: /^\./,
+    persistent: true,
+    ignoreInitial: true,
+  };
+
+  var fileWatcher = chokidar.watch(files, opts);
+  fileWatcher.on('change', itHappened);
+  fileWatcher.on('error', onError);
+
+  var dirWatcher = chokidar.watch(dirs, opts);
+  dirWatcher.on('add', itHappened);
+  dirWatcher.on('unlink', itHappened);
+  fileWatcher.on('error', onError);
+
+  function itHappened() {
+    fileWatcher.close();
+    dirWatcher.close();
     cb();
-    watcher.close();
-  });
-  return watcher;
+  }
+
+  function onError(err) {
+    console.error("Error watching files:", err.stack);
+  }
+}
+
+function watchFilesOnce(files, cb) {
+  watchFilesAndDirsOnce(files, [], cb);
 }
