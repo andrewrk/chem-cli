@@ -27,6 +27,11 @@ npm run dev
     
 ## Release Notes
 
+### 1.0.0
+
+ * update to latest browserify
+ * start using semver correctly
+
 ### 0.6.1
 
  * add /public/bootstrap.js to auto-generated .gitignore
