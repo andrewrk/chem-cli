@@ -1,9 +1,12 @@
 var chem = require("chem");
 var v = chem.vec2d;
+var canvas = document.getElementById("game");
+var engine = new chem.Engine(canvas);
+engine.showLoadProgressBar();
+engine.start();
+canvas.focus();
 
-chem.onReady(function () {
-  var canvas = document.getElementById("game");
-  var engine = new chem.Engine(canvas);
+chem.resources.on('ready', function () {
   var batch = new chem.Batch();
   var boom = new chem.Sound('sfx/boom.ogg');
   var ship = new chem.Sprite('ship', {
@@ -56,6 +59,4 @@ chem.onReady(function () {
     // draw a little fps counter in the corner
     fpsLabel.draw(context);
   });
-  engine.start();
-  canvas.focus();
 });

@@ -68,7 +68,6 @@ class Game
   start: ->
     @engine.on('draw', @draw)
     @engine.on('update', @update)
-    @engine.start()
 
   createStar: ->
     sprite = new Sprite @imgStar[randInt(0, 1)],
@@ -176,10 +175,12 @@ class Game
     @fpsLabel.draw context
 
 
-chem.onReady ->
-  canvas = document.getElementById("game")
-  engine = new Engine(canvas)
-  canvas.focus()
+canvas = document.getElementById("game")
+engine = new Engine(canvas)
+engine.showLoadingProgressBar()
+engine.start()
+canvas.focus()
+chem.resources.on 'ready', ->
   game = new Game(engine)
   game.start()
 

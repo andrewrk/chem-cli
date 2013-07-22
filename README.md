@@ -27,6 +27,16 @@ npm run dev
     
 ## Release Notes
 
+### 0.6.0
+
+ * add auto generated bootstrap code
+ * chemfile.useSpritesheet is automatically set
+ * bootstrapping images and text works automatically
+ * chem init shows stdout from child process
+ * public/img/ and public/text/ are now special dirs
+ * fix not noticing certain changes to chemfile
+ * still works if directories are missing
+
 ### 0.5.2
 
  * update templates to chem 0.5.0
