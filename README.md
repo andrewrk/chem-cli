@@ -27,6 +27,10 @@ npm run dev
     
 ## Release Notes
 
+### 0.6.1
+
+ * add /public/bootstrap.js to auto-generated .gitignore
+
 ### 0.6.0
 
  * add auto generated bootstrap code
