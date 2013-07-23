@@ -425,7 +425,9 @@ function getAllFiles(dir, cb) {
     }
   });
   finder.on('file', function(file) {
-    files.push(file);
+    if (! isDotFile(file)) {
+      files.push(file);
+    }
   });
   finder.on('end', function() {
     cb(null, files);
@@ -547,13 +549,13 @@ function computeAnchor(anim){
   }
 }
 
-function dotfiles(fullPath) {
+function isDotFile(fullPath) {
   return (/^\./).test(path.basename(fullPath));
 }
 
 function watchFilesAndDirsOnce(files, dirs, cb) {
   var opts = {
-    ignored: dotfiles,
+    ignored: isDotFile,
     persistent: true,
     ignoreInitial: true,
   };
