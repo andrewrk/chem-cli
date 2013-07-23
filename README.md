@@ -27,6 +27,14 @@ npm run dev
     
 ## Release Notes
 
+### 1.0.2
+
+ * fix text and image assets not ignoring dotfiles
+
+### 1.0.1
+
+ * update chem dependency
+
 ### 1.0.0
 
  * update to latest browserify
