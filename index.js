@@ -547,9 +547,13 @@ function computeAnchor(anim){
   }
 }
 
+function dotfiles(fullPath) {
+  return (/^\./).test(path.basename(fullPath));
+}
+
 function watchFilesAndDirsOnce(files, dirs, cb) {
   var opts = {
-    ignored: /^\./,
+    ignored: dotfiles,
     persistent: true,
     ignoreInitial: true,
   };
