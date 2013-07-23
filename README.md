@@ -27,9 +27,13 @@ npm run dev
     
 ## Release Notes
 
+### 1.0.3
+
+ * fix dotfiles making it into asset loading list
+
 ### 1.0.2
 
- * fix text and image assets not ignoring dotfiles
+ * fix dotfiles triggering bootstrap file generation
 
 ### 1.0.1
 
