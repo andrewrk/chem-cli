@@ -550,7 +550,8 @@ function computeAnchor(anim){
 }
 
 function isDotFile(fullPath) {
-  return (/^\./).test(path.basename(fullPath));
+  var basename = path.basename(fullPath);
+  return (/^\./).test(basename) || (/~$/).test(basename);
 }
 
 function watchFilesAndDirsOnce(files, dirs, cb) {
