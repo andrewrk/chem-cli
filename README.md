@@ -27,6 +27,10 @@ npm run dev
     
 ## Release Notes
 
+### 1.0.5
+
+ * update chem dependency
+
 ### 1.0.4
  * ignore files ending in ~
  * update chem dependency

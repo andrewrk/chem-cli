@@ -2,7 +2,7 @@
   "name": "chem-cli",
   "description": "html5 canvas game engine optimized for rapid development - command line interface",
   "author": "Andrew Kelley <superjoe30@gmail.com>",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "license": "MIT",
   "main": "index.js",
   "repository": {
@@ -29,7 +29,7 @@
     "LiveScript": "~1.1.1",
     "connect-nocache": "~1.0.1",
     "ncp": "~0.4.2",
-    "chem": "~2.0.0"
+    "chem": "~2.1.0"
   },
   "bin": {
     "chem": "./index.js"
