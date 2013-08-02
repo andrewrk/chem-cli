@@ -372,31 +372,39 @@ function watchSpritesheet (){
     // get list of files to watch
     var watchFiles = [getChemfilePath()];
     // get list of all image files
-    var animations = forceRequireChemfile().animations;
-    getAllImgFiles(function(err, allImgFiles) {
-      if (err) {
-        console.error("Error getting all image files:", err.stack);
-        watchFilesOnce(watchFiles, rewatch);
-        return;
-      }
-      var success = true;
-      for (var name in animations) {
-        var anim = animations[name];
-        var files = filesFromAnimFrames(anim.frames, name, allImgFiles);
-        if (files.length === 0) {
-          console.error("animation `" + name + "` has no frames");
-          success = false;
-          continue;
-        }
-        files.forEach(addWatchFile);
-      }
+    var spritesheet = forceRequireChemfile().spritesheet;
+    if (spritesheet == null) {
       watchFilesOnce(watchFiles, rewatch);
-      if (success) {
-        recompile();
-      }
-    });
+      recompile();
+    } else {
+      addAllImgFilesToWatch();
+    }
     function addWatchFile(file) {
-      watchFiles.push(path.join(imgPath, file));
+      watchFiles.push(file);
+    }
+    function addAllImgFilesToWatch() {
+      getAllImgFiles(function(err, allImgFiles) {
+        if (err) {
+          console.error("Error getting all image files:", err.stack);
+          watchFilesOnce(watchFiles, rewatch);
+          return;
+        }
+        var success = true;
+        for (var name in spritesheet.animations) {
+          var anim = spritesheet.animations[name];
+          var files = filesFromAnimFrames(anim.frames, name, allImgFiles);
+          if (files.length === 0) {
+            console.error("animation `" + name + "` has no frames");
+            success = false;
+            continue;
+          }
+          files.forEach(addWatchFile);
+        }
+        watchFilesOnce(watchFiles, rewatch);
+        if (success) {
+          recompile();
+        }
+      });
     }
   }
 }
