@@ -27,6 +27,10 @@ npm run dev
     
 ## Release Notes
 
+### 1.0.7
+
+ * update chem dependency
+
 ### 1.0.6
 
  * fix not rebuilding spritesheet when source images are changed
