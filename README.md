@@ -27,6 +27,11 @@ npm run dev
     
 ## Release Notes
 
+### 1.0.6
+
+ * fix not rebuilding spritesheet when source images are changed
+ * fix race condition not building bootstrap.js fast enough
+
 ### 1.0.5
 
  * update chem dependency
