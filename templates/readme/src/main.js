@@ -1,5 +1,6 @@
 var chem = require("chem");
 var v = chem.vec2d;
+var ani = chem.resources.animations;
 var canvas = document.getElementById("game");
 var engine = new chem.Engine(canvas);
 engine.showLoadProgressBar();
@@ -9,7 +10,7 @@ canvas.focus();
 chem.resources.on('ready', function () {
   var batch = new chem.Batch();
   var boom = new chem.Sound('sfx/boom.ogg');
-  var ship = new chem.Sprite('ship', {
+  var ship = new chem.Sprite(ani.ship, {
     batch: batch,
     pos: v(200, 200),
     rotation: Math.PI / 2
@@ -41,7 +42,7 @@ chem.resources.on('ready', function () {
     // press space to blow yourself up
     if (engine.buttonJustPressed(chem.button.KeySpace)) {
       boom.play();
-      ship.setAnimationName('boom');
+      ship.setAnimation(ani.boom);
       ship.setFrameIndex(0);
       ship.on('animationend', function() {
         ship.delete();
