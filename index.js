@@ -138,12 +138,17 @@ function cmdInit(args, argv) {
 }
 
 function cmdDev(args, options){
+  var firstTime = true;
   serveStaticFiles(options.port || 10308);
-  watchBootstrap();
-  compileClientSource({
-    watch: true
-  });
+  watchBootstrap(onGeneratedBootstrap);
   watchSpritesheet();
+  function onGeneratedBootstrap() {
+    if (! firstTime) return;
+    firstTime = false;
+    compileClientSource({
+      watch: true
+    });
+  }
 }
 
 function cmdClean() {
@@ -253,9 +258,10 @@ function compileClientSource (options){
   }
 }
 
-function watchBootstrap() {
+function watchBootstrap(generatedEventFn) {
   // this function must generate bootstrapJsOut once and every time
   // the chemfile updates.
+  // cb is called every time bootstrap is generated
   rewatch();
   function recompile() {
     generateBootstrapJs(function(err) {
@@ -265,6 +271,7 @@ function watchBootstrap() {
       } else {
         console.info(timestamp + " - generated " + bootstrapJsOut);
       }
+      generatedEventFn();
     });
   }
   function rewatch() {
