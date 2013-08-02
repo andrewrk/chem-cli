@@ -27,6 +27,10 @@ npm run dev
     
 ## Release Notes
 
+### 1.0.8
+
+ * fix templates
+
 ### 1.0.7
 
  * update chem dependency
