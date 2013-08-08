@@ -27,6 +27,11 @@ npm run dev
     
 ## Release Notes
 
+### 1.0.9
+
+ * update spritesheet dependency. fixes generated spritesheets not being
+   optimally organized
+
 ### 1.0.8
 
  * fix templates
