@@ -27,6 +27,10 @@ npm run dev
     
 ## Release Notes
 
+### 1.0.10
+
+ * always depend on latest chem
+
 ### 1.0.9
 
  * update spritesheet dependency. fixes generated spritesheets not being
