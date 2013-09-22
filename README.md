@@ -13,11 +13,6 @@ sudo apt-get install libcairo2-dev
 # freshly created project from github with only a .git/ and README.md.
 cd my-project
 
-# use npm init to create a package.json file so that we can install
-# dependencies locally instead of globally.
-# feel free to mash enter through the series of questions.
-npm init
-
 # init the project with chem-cli
 npm install chem-cli
 ./node_modules/.bin/chem init
@@ -31,6 +26,15 @@ npm run dev
 ```
     
 ## Release Notes
+
+### 1.1.0
+
+ * watcher no longer crashes when a syntax error is introduced to the code.
+   instead it displays an error message in the browser.
+ * avoid some module bloat
+ * updated livescript to 1.2.0
+ * clean up template html
+ * template defaults to adding F5 key to `buttonCaptureExceptions`
 
 ### 1.0.11
 
