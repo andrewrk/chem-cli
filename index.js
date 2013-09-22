@@ -5,16 +5,15 @@ var path = require('path');
 var child_process = require('child_process');
 var Batch = require('batch');
 var chokidar = require('chokidar');
-var Vec2d = require('vec2d').Vec2d;
-var findit = require('findit2');
+var findit = require('findit');
 var ncp = require('ncp').ncp;
-var browserify = require('browserify');
-var watchify = require('watchify');
+var watchify = require('watchify2');
+var browserify = watchify.browserify;
 var cocoify = require('cocoify');
-var icsify = require('icsify');
 var liveify = require('liveify');
 var coffeeify = require('coffeeify');
-var express = require('express');
+var connect = require('connect');
+var http = require('http');
 var noCacheMiddleware = require('connect-nocache')();
 var optimist = require('optimist');
 var Spritesheet = require('spritesheet');
@@ -30,14 +29,12 @@ var spritesheetOut = userPath("./public/spritesheet.png");
 var animationsJsonOut = userPath("./public/animations.json");
 var bootstrapJsOut = userPath("./public/bootstrap.js");
 var chemCliPackageJson = require(path.join(__dirname, "package.json"));
-var chemPackageJson = require(path.join(path.dirname(require.resolve("chem")), "package.json"));
 var objHasOwn = {}.hasOwnProperty;
 
 // allow us to require non-js chemfiles
 require('coco');
 require('coffee-script');
 require('LiveScript');
-require('iced-coffee-script');
 
 var allOutFiles = [
   clientOut,
@@ -52,6 +49,10 @@ var tasks = {
   dev: cmdDev,
   clean: cmdClean,
 };
+
+// set this to a string to cause the http server to send
+// an error message instead of anything else
+var bundleSyntaxError = null;
 
 run();
 
@@ -118,7 +119,7 @@ function cmdInit(args, argv) {
       stdio: 'inherit',
     };
     var child = child_process.spawn('npm', [
-        'install', '--save', 'chem@' + chemPackageJson.version], options);
+        'install', '--save', 'chem'], options);
     child.on('exit', function(code) {
       if (code) {
         cb(new Error("error code " + code));
@@ -240,8 +241,6 @@ function compileClientSource (options){
       b.add(bootstrapJsOut);
     }
     b.transform(coffeeify);
-    //Uncomment when icsify no longer tries to run its filter for .coffee files
-    //b.transform(icsify);
     b.transform(liveify);
     b.transform(cocoify);
     if (options.watch) {
@@ -251,9 +250,18 @@ function compileClientSource (options){
       writeBundle();
     }
     function writeBundle() {
-      var timestamp = new Date().toLocaleTimeString();
-      console.info(timestamp + " - generated " + clientOut);
-      b.bundle().pipe(fs.createWriteStream(clientOut));
+      var outStream = b.bundle();
+      outStream.on('error', function(err) {
+        bundleSyntaxError = err.message;
+        var timestamp = new Date().toLocaleTimeString();
+        console.info(timestamp + " - error " + bundleSyntaxError);
+      });
+      outStream.on('close', function() {
+        bundleSyntaxError = null;
+        var timestamp = new Date().toLocaleTimeString();
+        console.info(timestamp + " - generated " + clientOut);
+      });
+      outStream.pipe(fs.createWriteStream(clientOut));
     }
   }
 }
@@ -344,12 +352,21 @@ function generateBootstrapJs(cb) {
 }
 
 function serveStaticFiles (port){
-  var app = express();
+  var app = connect();
   app.use(noCacheMiddleware);
-  app.use(express.static(publicDir));
-  app.listen(port, function() {
+  app.use(errorMsgMiddleware);
+  app.use(connect.static(publicDir));
+  var server = http.createServer(app);
+  server.listen(port, function() {
     console.info("Serving at http://0.0.0.0:" + port + "/");
   });
+}
+
+function errorMsgMiddleware(req, resp, next) {
+  if (!bundleSyntaxError) return next();
+
+  resp.setHeader('Content-Type', "text/plain");
+  resp.end(bundleSyntaxError);
 }
 
 function watchSpritesheet (){
@@ -431,14 +448,7 @@ function getAllTextFiles(cb) {
 
 function getAllFiles(dir, cb) {
   var files = [];
-  var finder = findit.find(dir);
-  finder.on('error', function(err) {
-    if (err.code === 'ENOENT') {
-      cb(null, []);
-    } else {
-      cb(err);
-    }
-  });
+  var finder = findit(dir);
   finder.on('file', function(file) {
     if (! isDotFile(file)) {
       files.push(file);
@@ -533,7 +543,7 @@ function createSpritesheet(cb) {
   function fileToFrame(file) {
     var sprite = sheet.sprites[file];
     return {
-      size: new Vec2d(sprite.image.width, sprite.image.height),
+      size: xy(sprite.image.width, sprite.image.height),
       pos: sprite.pos,
     };
   }
@@ -542,23 +552,24 @@ function createSpritesheet(cb) {
 function computeAnchor(anim){
   switch (anim.anchor) {
   case 'center':
-    return anim.frames[0].size.scaled(0.5).floor();
+    return xy(Math.floor(anim.frames[0].size.x / 2),
+        Math.floor(anim.frames[0].size.y / 2));
   case 'topleft':
-    return new Vec2d(0, 0);
+    return xy(0, 0);
   case 'topright':
-    return new Vec2d(anim.frames[0].size.x, 0);
+    return xy(anim.frames[0].size.x, 0);
   case 'bottomleft':
-    return new Vec2d(0, anim.frames[0].size.y);
+    return xy(0, anim.frames[0].size.y);
   case 'bottomright':
     return anim.frames[0].size;
   case 'bottom':
-    return new Vec2d(anim.frames[0].size.x / 2, anim.frames[0].size.y);
+    return xy(Math.floor(anim.frames[0].size.x / 2), anim.frames[0].size.y);
   case 'top':
-    return new Vec2d(anim.frames[0].size.x / 2, 0);
+    return xy(Math.floor(anim.frames[0].size.x / 2), 0);
   case 'right':
-    return new Vec2d(anim.frames[0].size.x, anim.frames[0].size.y / 2);
+    return xy(anim.frames[0].size.x, Math.floor(anim.frames[0].size.y / 2));
   case 'left':
-    return new Vec2d(0, anim.frames[0].size.y / 2);
+    return xy(0, Math.floor(anim.frames[0].size.y / 2));
   default:
     return anim.anchor
   }
@@ -598,4 +609,8 @@ function watchFilesAndDirsOnce(files, dirs, cb) {
 
 function watchFilesOnce(files, cb) {
   watchFilesAndDirsOnce(files, [], cb);
+}
+
+function xy(x, y) {
+  return {x: x, y: y};
 }
