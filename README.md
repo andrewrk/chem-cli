@@ -6,11 +6,17 @@ See [chem](http://github.com/superjoe30/chem)
 
 ```bash
 # install dependencies in ubuntu
+# for other OSes see https://github.com/LearnBoost/node-canvas/wiki/
 sudo apt-get install libcairo2-dev
 
-# start with a nearly-empty project, such as a freshly created project
-# from github with only a .git/ and README.md.
+# start with an nearly-empty project such as an empty directory or a
+# freshly created project from github with only a .git/ and README.md.
 cd my-project
+
+# use npm init to create a package.json file so that we can install
+# dependencies locally instead of globally.
+# feel free to mash enter through the series of questions.
+npm init
 
 # init the project with chem-cli
 npm install chem-cli
@@ -18,7 +24,6 @@ npm install chem-cli
 
 # the `dev` command will run a development server which will automatically
 # recompile your code, generate your spritesheets, and serve your assets.
-# after running `init` above, simply:
 npm run dev
 
 # see more commands
@@ -26,6 +31,10 @@ npm run dev
 ```
     
 ## Release Notes
+
+### 1.0.11
+
+ * templates have "built with chem" text underneath the game
 
 ### 1.0.10
 
