@@ -27,6 +27,12 @@ npm run dev
     
 ## Release Notes
 
+### 1.2.0
+
+ * asset files can be softlinks
+ * dev command takes a --prefix argument so you can put assets in other
+   places
+
 ### 1.1.0
 
  * watcher no longer crashes when a syntax error is introduced to the code.
