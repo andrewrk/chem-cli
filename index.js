@@ -449,14 +449,19 @@ function getAllTextFiles(cb) {
 function getAllFiles(dir, cb) {
   var files = [];
   var finder = findit(dir);
-  finder.on('file', function(file) {
-    if (! isDotFile(file)) {
-      files.push(file);
-    }
-  });
+  finder.on('file', onFileOrLink);
+  finder.on('link', onFileOrLink);
+
   finder.on('end', function() {
     cb(null, files);
   });
+
+
+  function onFileOrLink(file) {
+    if (! isDotFile(file)) {
+      files.push(file);
+    }
+  }
 }
 
 function getAllImgFiles(cb) {
