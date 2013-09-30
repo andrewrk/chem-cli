@@ -141,7 +141,7 @@ function cmdInit(args, argv) {
 function cmdDev(args, options){
   var firstTime = true;
   serveStaticFiles(options.port || 10308);
-  watchBootstrap(onGeneratedBootstrap);
+  watchBootstrap(options.prefix, onGeneratedBootstrap);
   watchSpritesheet();
   function onGeneratedBootstrap() {
     if (! firstTime) return;
@@ -266,13 +266,13 @@ function compileClientSource (options){
   }
 }
 
-function watchBootstrap(generatedEventFn) {
+function watchBootstrap(prefix, generatedEventFn) {
   // this function must generate bootstrapJsOut once and every time
   // the chemfile updates.
   // cb is called every time bootstrap is generated
   rewatch();
   function recompile() {
-    generateBootstrapJs(function(err) {
+    generateBootstrapJs(prefix, function(err) {
       var timestamp = new Date().toLocaleTimeString();
       if (err) {
         console.info(timestamp + " - " + err.stack);
@@ -291,7 +291,7 @@ function watchBootstrap(generatedEventFn) {
   }
 }
 
-function generateBootstrapJs(cb) {
+function generateBootstrapJs(prefix, cb) {
   var chemfile = forceRequireChemfile();
   if (chemfile.autoBootstrap === false) {
     fs.unlink(bootstrapJsOut, function(err) {
@@ -345,6 +345,9 @@ function generateBootstrapJs(cb) {
     if (imgCount >= 1) {
       json = JSON.stringify(imgObj, null, 2);
       code += "chem.resources.images = " + json + ";\n";
+    }
+    if (prefix) {
+      code += "chem.resources.prefix = " + JSON.stringify(prefix) + ";\n";
     }
     code += "chem.resources.bootstrap();\n";
     fs.writeFile(bootstrapJsOut, code, cb);
