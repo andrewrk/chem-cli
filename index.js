@@ -13,6 +13,7 @@ var cocoify = require('cocoify');
 var liveify = require('liveify');
 var coffeeify = require('coffeeify');
 var connect = require('connect');
+var serveStatic = require('serve-static');
 var http = require('http');
 var noCacheMiddleware = require('connect-nocache')();
 var optimist = require('optimist');
@@ -363,7 +364,7 @@ function serveStaticFiles (port){
   var app = connect();
   app.use(noCacheMiddleware);
   app.use(errorMsgMiddleware);
-  app.use(connect.static(publicDir));
+  app.use(serveStatic(publicDir));
   var server = http.createServer(app);
   server.listen(port, function() {
     console.info("Serving at http://0.0.0.0:" + port + "/");
