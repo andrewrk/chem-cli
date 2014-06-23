@@ -3,7 +3,7 @@
 var fs = require('fs');
 var path = require('path');
 var child_process = require('child_process');
-var Batch = require('batch');
+var Pend = require('pend');
 var chokidar = require('chokidar');
 var findit = require('findit');
 var ncp = require('ncp').ncp;
@@ -74,11 +74,11 @@ function cmdInit(args, argv) {
   var projectName = path.basename(path.resolve("."));
   var template = argv.example || "readme";
 
-  var batch = new Batch();
-  batch.push(copyTemplate);
-  batch.push(installGitIgnore);
-  batch.push(initPackageJson);
-  batch.end(batchEnd);
+  var pend = new Pend();
+  pend.go(copyTemplate);
+  pend.go(installGitIgnore);
+  pend.go(initPackageJson);
+  pend.wait(printMessageAndDone);
 
   function copyTemplate(cb) {
     var src = chemPath("templates/" + template);
@@ -128,7 +128,7 @@ function cmdInit(args, argv) {
       cb();
     });
   }
-  function batchEnd(err) {
+  function printMessageAndDone(err) {
     if (err) {
       console.error("Error setting up:", err.stack);
       return;
@@ -153,13 +153,13 @@ function cmdDev(args, options){
 }
 
 function cmdClean() {
-  var batch = new Batch();
+  var pend = new Pend();
   allOutFiles.forEach(function(outFile) {
-    batch.push(function(done) {
-      fs.unlink(outFile, done);
+    pend.go(function(cb) {
+      fs.unlink(outFile, cb);
     });
   });
-  batch.end(function(err) {
+  pend.wait(function(err) {
     if (err) {
       console.error("Error deleting files:", err.stack);
     }
@@ -303,17 +303,22 @@ function generateBootstrapJs(prefix, cb) {
     });
     return;
   }
-  var batch = new Batch();
-  batch.push(function(cb) {
-    getAllTextFiles(cb);
+  var pend = new Pend();
+  var allTextFiles, allStaticImgFiles;
+  pend.go(function(cb) {
+    getAllTextFiles(function(err, _allTextFiles) {
+      allTextFiles = _allTextFiles;
+      cb(err);
+    });
   });
-  batch.push(function(cb) {
-    getAllStaticImageFiles(cb);
+  pend.go(function(cb) {
+    getAllStaticImageFiles(function(err, _allStaticImgFiles) {
+      allStaticImgFiles = _allStaticImgFiles;
+      cb(err);
+    });
   });
-  batch.end(function(err, results) {
+  pend.wait(function(err) {
     if (err) return cb(err);
-    var allTextFiles = results[0];
-    var allStaticImgFiles = results[1];
 
     var textObj = {};
     var textCount = 0;

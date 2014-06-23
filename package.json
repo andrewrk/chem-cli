@@ -10,21 +10,22 @@
     "url": "git://github.com/superjoe30/chem-cli.git"
   },
   "dependencies": {
-    "optimist": "~0.3.4",
-    "chokidar": "~0.6.3",
-    "spritesheet": "~1.0.0",
-    "batch": "~0.5.0",
-    "coco": "~0.9.1",
-    "coffee-script": "~1.6.3",
-    "cocoify": "0.0.1",
-    "coffeeify": "~0.5.1",
-    "liveify": "~0.3.1",
     "LiveScript": "~1.2.0",
-    "connect-nocache": "~1.0.1",
-    "ncp": "~0.4.2",
-    "findit": "~1.1.0",
+    "batch": "~0.5.0",
+    "chokidar": "~0.6.3",
+    "coco": "~0.9.1",
+    "cocoify": "0.0.1",
+    "coffee-script": "~1.6.3",
+    "coffeeify": "~0.5.1",
     "connect": "~2.9.0",
-    "watchify2": "~0.2.1"
+    "connect-nocache": "~1.0.1",
+    "findit": "~1.1.0",
+    "liveify": "~0.3.1",
+    "ncp": "~0.4.2",
+    "optimist": "~0.3.4",
+    "pend": "~1.1.1",
+    "spritesheet": "~1.0.0",
+    "watchify": "~0.10.2"
   },
   "bin": {
     "chem": "./index.js"
