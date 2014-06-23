@@ -24,7 +24,7 @@
     "optimist": "~0.6.1",
     "pend": "~1.1.1",
     "serve-static": "^1.2.3",
-    "spritesheet": "~1.0.2",
+    "spritesheet": "~1.1.0",
     "watchify": "~0.10.2"
   },
   "bin": {

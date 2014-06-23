@@ -7,7 +7,7 @@ See [chem](http://github.com/superjoe30/chem)
 ```bash
 # install dependencies in ubuntu
 # for other OSes see https://github.com/LearnBoost/node-canvas/wiki/
-sudo apt-get install libcairo2-dev
+sudo apt-get install libcairo2-dev libgif-dev
 
 # start with an nearly-empty project such as an empty directory or a
 # freshly created project from github with only a .git/ and README.md.
