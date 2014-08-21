@@ -11,21 +11,22 @@
   },
   "dependencies": {
     "LiveScript": "~1.2.0",
-    "chokidar": "~0.8.2",
+    "chokidar": "~0.8.4",
     "coco": "~0.9.1",
     "cocoify": "0.0.1",
     "coffee-script": "~1.7.1",
-    "coffeeify": "~0.6.0",
-    "connect": "~3.0.1",
+    "coffeeify": "~0.7.0",
+    "connect": "~3.1.1",
     "connect-nocache": "~1.0.1",
-    "findit": "~1.2.0",
+    "findit": "~2.0.0",
     "liveify": "~0.4.0",
-    "ncp": "~0.5.1",
+    "ncp": "~0.6.0",
     "optimist": "~0.6.1",
-    "pend": "~1.1.1",
-    "serve-static": "^1.2.3",
+    "pend": "~1.1.3",
+    "serve-static": "~1.5.3",
     "spritesheet": "~1.1.0",
-    "watchify": "~0.10.2"
+    "watchify": "~1.0.2",
+    "browserify": "~5.10.1"
   },
   "bin": {
     "chem": "./index.js"

@@ -8,7 +8,7 @@ var chokidar = require('chokidar');
 var findit = require('findit');
 var ncp = require('ncp').ncp;
 var watchify = require('watchify');
-var browserify = watchify.browserify;
+var browserify = require('browserify');
 var cocoify = require('cocoify');
 var liveify = require('liveify');
 var coffeeify = require('coffeeify');
@@ -227,17 +227,25 @@ function userPath (file){
 }
 
 function compileClientSource (options){
-  var b = null;
+  var w = null;
 
   rewatch();
 
   function rewatch() {
-    if (b != null) b.removeAllListeners();
+    if (w != null) {
+      w.close();
+      w = null;
+    }
     watchFilesOnce([getChemfilePath()], rewatch);
-
     var chemfile = forceRequireChemfile();
-    var compile = options.watch ? watchify : browserify;
-    b = compile(userPath(chemfile.main));
+
+    var b = browserify({
+      cache: {},
+      packageCache: {},
+      fullPaths: true,
+    });
+    b.add(userPath(chemfile.main));
+
     if (chemfile.autoBootstrap !== false) {
       b.add(bootstrapJsOut);
     }
@@ -245,24 +253,26 @@ function compileClientSource (options){
     b.transform(liveify);
     b.transform(cocoify);
     if (options.watch) {
-      b.on('update', writeBundle);
+      w = watchify(b);
+      w.on('update', writeBundle);
       writeBundle();
     } else {
       writeBundle();
     }
     function writeBundle() {
-      var outStream = b.bundle();
-      outStream.on('error', function(err) {
+      var bundleStream = b.bundle();
+      bundleStream.on('error', function(err) {
         bundleSyntaxError = err.message;
         var timestamp = new Date().toLocaleTimeString();
         console.info(timestamp + " - error " + bundleSyntaxError);
       });
+      var outStream = fs.createWriteStream(clientOut);
       outStream.on('close', function() {
         bundleSyntaxError = null;
         var timestamp = new Date().toLocaleTimeString();
         console.info(timestamp + " - generated " + clientOut);
       });
-      outStream.pipe(fs.createWriteStream(clientOut));
+      bundleStream.pipe(outStream);
     }
   }
 }
