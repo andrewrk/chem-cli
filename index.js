@@ -121,6 +121,7 @@ function cmdInit(args, argv) {
     };
     var child = child_process.spawn('npm', [
         'install', '--save', 'chem'], options);
+    child.on('error', cb);
     child.on('exit', function(code) {
       if (code) {
         cb(new Error("error code " + code));
