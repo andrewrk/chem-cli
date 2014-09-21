@@ -2,7 +2,7 @@
 
 var fs = require('fs');
 var path = require('path');
-var child_process = require('child_process');
+var spawn = require('spawn-cmd').spawn;
 var Pend = require('pend');
 var chokidar = require('chokidar');
 var findit = require('findit');
@@ -119,8 +119,9 @@ function cmdInit(args, argv) {
     var options = {
       stdio: 'inherit',
     };
-    var child = child_process.spawn('npm', [
+    var child = spawn('npm', [
         'install', '--save', 'chem'], options);
+    child.on('error', cb);
     child.on('exit', function(code) {
       if (code) {
         cb(new Error("error code " + code));
