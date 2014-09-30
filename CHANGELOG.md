@@ -1,3 +1,8 @@
+### 1.5.0
+
+ * Fix crash when spawning npm process fails (thanks darthfett)
+ * Fix spawning child process on Windows (thanks darthfett)
+
 ### 1.4.0
 
  * update dependencies
